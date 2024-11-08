@@ -85,18 +85,6 @@
             return length;
         }
 
-        // 線と点が接触しているか判定
-        function isPointOnPath(point, path) {
-            for (let i = 1; i < path.length; i++) {
-                const p1 = path[i - 1];
-                const p2 = path[i];
-                if (distanceToSegment(point, p1, p2) < foodRadius) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         // 点と線分の距離を計算
         function distanceToSegment(point, p1, p2) {
             const lineLength = distance(p1, p2);
@@ -128,7 +116,7 @@
             // 餌を描画（白、線に触れていると黄色）
             foods.forEach(food => {
                 // 線と触れているかどうか判定
-                food.hovered = isPointOnPath({x: food.x, y: food.y}, userPath);
+                food.hovered = userPath.some(point => distance(point, food) < foodRadius);
                 ctx.fillStyle = food.hovered ? "yellow" : "white"; // 線に触れている場合黄色
                 ctx.beginPath();
                 ctx.arc(food.x, food.y, foodRadius, 0, Math.PI * 2);
