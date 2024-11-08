@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粘菌ゲーム</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+    <p id="score">スコア: 0</p>
+    <button onclick="resetGame()">リセット</button>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const foods = [];
+        const numFoods = 2; // 餌の数を2に限定
+        const userPath = [];
+        const foodRadius = 10;
+        const penaltyZones = [];
+        const penaltyZoneRadius = 100; // 減点ゾーンの半径
+        const penaltyPerZonePass = 0.5; // 減点ゾーン通過時の減点
+        let isDrawing = false;
+        let idealPathLength = 0;
+
+        // ランダムな位置に餌と減点ゾーンを配置
+        function generateFoodsAndPenaltyZones() {
+            foods.length = 0;
+            penaltyZones.length = 0;
+
+            // 減点ゾーンの生成
+            const numPenaltyZones = 2; // 減点ゾーンの数
+            for (let i = 0; i < numPenaltyZones; i++) {
+                penaltyZones.push({
+                    x: Math.random() * (canvas.width - 2 * penaltyZoneRadius) + penaltyZoneRadius,
+                    y: Math.random() * (canvas.height - 2 * penaltyZoneRadius) + penaltyZoneRadius
+                });
+            }
+
+            // 餌を減点ゾーンと重ならないように生成
+            for (let i = 0; i < numFoods; i++) {
+                let food;
+                let isOverlapping;
+
+                do {
+                    food = {
+                        x: Math.random() * (canvas.width - 2 * foodRadius) + foodRadius,
+                        y: Math.random() * (canvas.height - 2 * foodRadius) + foodRadius,
+                        taken: false,
+                        hovered: false
+                    };
+
+                    // 減点ゾーンと重なっているかチェック
+                    isOverlapping = penaltyZones.some(zone => distance(food, zone) < penaltyZoneRadius + foodRadius);
+                } while (isOverlapping);
+
+                foods.push(food);
+            }
+        }
+
+        // 餌の間の最短経路を計算
+        function findShortestPath() {
+            const path = foods.slice();
+            idealPathLength = calculatePathLength(path);
+            return path;
+        }
+
+        // 距離計算
+        function distance(p1, p2) {
+            return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
+        }
+
+        // 経路の長さを計算
+        function calculatePathLength(path) {
+            let length = 0;
+            for (let i = 1; i < path.length; i++) {
+                length += distance(path[i - 1], path[i]);
+            }
+            return length;
+        }
+
+        // 餌と減点ゾーンを描画
+        function drawElements() {
+            // 減点ゾーンを描画
+            ctx.fillStyle = "red";
+            penaltyZones.forEach(zone => {
+                ctx.beginPath();
+                ctx.arc(zone.x, zone.y, penaltyZoneRadius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 餌を描画
+            foods.forEach(food => {
+                ctx.fillStyle = food.hovered ? "green" : "orange"; // カーソルが重なっている場合に色を変える
+                ctx.beginPath();
+                ctx.arc(food.x, food.y, foodRadius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // ユーザーの描いた経路を評価
+        function evaluateUserPath() {
+            let pathLength = calculatePathLength(userPath);
+            let foodCount = 0;
+            let penalty = 0;
+
+            // 経路上の各点で餌を通過したか確認
+            foods.forEach(food => {
+                food.taken = userPath.some(point => distance(point, food) < foodRadius);
+                if (food.taken) foodCount++;
+            });
+
+            // 減点ゾーンのチェック
+            userPath.forEach(point => {
+                penaltyZones.forEach(zone => {
+                    if (distance(point, zone) < penaltyZoneRadius) {
+                        penalty += penaltyPerZonePass;
+                    }
+                });
+            });
+
+            // スコア計算：2つの餌を取った場合のみ計算、ペナルティがあっても0にはならない
+            let score = 0;
+            if (foodCount === numFoods) {
+                const distanceScore = Math.max(0, (idealPathLength / pathLength) * 100) - penalty;
+                score = Math.round(distanceScore > 0 ? distanceScore : 0);
+            }
+            document.getElementById("score").textContent = `スコア: ${score}`;
+        }
+
+        // Canvasのイベントリスナー
+        canvas.addEventListener("mousedown", (e) => {
+            if (!isDrawing) {
+                isDrawing = true;
+                userPath.length = 0; // 既存の線を消去
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // 新しく描く前にキャンバスをクリア
+                const pos = { x: e.offsetX, y: e.offsetY };
+                userPath.push(pos);
+                drawElements(); // 餌と減点ゾーンを再描画
+            }
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            const mousePos = { x: e.offsetX, y: e.offsetY };
+            
+            // 各餌の上にカーソルが来ているか判定
+            foods.forEach(food => {
+                food.hovered = distance(food, mousePos) < foodRadius;
+            });
+
+            if (isDrawing) {
+                userPath.push(mousePos);
+                drawElements(); // 餌と減点ゾーンを再描画
+                drawUserPath(); // ユーザーの描いた経路を描画
+            } else {
+                drawElements(); // 非描画中は通常の要素のみ表示
+            }
+        });
+
+        canvas.addEventListener("mouseup", () => {
+            isDrawing = false;
+            evaluateUserPath();
+        });
+
+        // ユーザーの描いた経路を描画
+        function drawUserPath() {
+            ctx.strokeStyle = "blue";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(userPath[0].x, userPath[0].y);
+            for (let i = 1; i < userPath.length; i++) {
+                ctx.lineTo(userPath[i].x, userPath[i].y);
+            }
+            ctx.stroke();
+        }
+
+        // ゲームをリセット
+        function resetGame() {
+            userPath.length = 0; // 既存の線を消去
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // キャンバス全体をクリア
+            generateFoodsAndPenaltyZones(); // 餌と減点ゾーンを再生成
+            findShortestPath(); // 最短経路を再計算
+            drawElements(); // 餌と減点ゾーンを描画
+            document.getElementById("score").textContent = "スコア: 0"; // スコアリセット
+        }
+
+        // 初期化
+        resetGame();
+    </script>
+</body>
+</html>
