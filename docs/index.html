@@ -6,79 +6,129 @@
     <title>粘菌ゲーム</title>
     <style>
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #121212;
-            color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: #282c34;
+            color: white;
+            text-align: center;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
+            padding: 20px;
         }
+
         h1 {
-            margin-top: 20px;
-            font-size: 1.8rem;
+            font-size: 2.5rem;
+            margin: 20px;
             color: #ffd700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+            text-shadow: 2px 2px 10px rgba(255, 215, 0, 0.8);
         }
+
         canvas {
-            border: 3px solid #444;
-            border-radius: 8px;
-            background-color: #000;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
             cursor: crosshair;
-            margin: 20px 0;
+            background-color: #333;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
         }
-        #score {
+
+        p {
             font-size: 1.5rem;
-            color: #ffd700;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #score {
             margin-bottom: 20px;
         }
-        button {
-            background-color: #ffd700;
-            color: #121212;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+
+        /* ポップアップカード */
+        #popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            padding: 20px;
+            background-color: #444;
+            border: 2px solid #ffd700;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            text-align: center;
+            z-index: 10;
         }
-        button:hover {
-            background-color: #ffe066;
+
+        #popup h2 {
+            margin-top: 0;
+            color: #ffd700;
         }
-        button:active {
-            transform: scale(0.98);
+
+        #closePopup {
+            background-color: #ff6347;
+        }
+
+        #closePopup:hover {
+            background-color: #ff4500;
         }
     </style>
 </head>
 <body>
+    <h1>Slime Mold Game</h1>
     <canvas id="gameCanvas" width="600" height="400"></canvas>
     <p id="score">スコア: 0</p>
+    <p id="totalScore">累計スコア: 0</p>
     <button onclick="resetGame()">リセット</button>
+
+    <!-- ポップアップカード -->
+    <div id="popup">
+        <h2>粘菌豆知識</h2>
+        <p id="factText"></p>
+        <button id="closePopup" onclick="closePopup()">閉じる</button>
+    </div>
+
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
+        const facts = [
+            "粘菌は驚異的な迷路探索能力を持っています。",
+            "粘菌は複数の細胞でできているが、1つの細胞のように動きます。",
+            "光や食物に反応して複雑な行動を見せます。",
+            "粘菌は特定の条件下で知識を伝えることができるとされています。",
+            "粘菌の最も古い化石は約6億年の歴史を持つと言われています。"
+        ];
+
+        let totalScore = 0;
+        let previousPopupScore = 0;  // 前回ポップアップを表示したスコア
+
         const foods = [];
-        const numFoods = 2; // 餌の数を2に限定
+        const numFoods = 2;
         const userPath = [];
         const foodRadius = 10;
         const penaltyZones = [];
-        const penaltyZoneRadius = 100; // 減点ゾーンの半径
-        const penaltyPerZonePass = 0.5; // 減点ゾーン通過時の減点
+        const penaltyZoneRadius = 100;
+        const penaltyPerZonePass = 0.5;
         let isDrawing = false;
         let idealPathLength = 0;
+        
 
-        // ランダムな位置に餌と減点ゾーンを配置
         function generateFoodsAndPenaltyZones() {
             foods.length = 0;
             penaltyZones.length = 0;
 
-            // 減点ゾーンの生成
-            const numPenaltyZones = 2; // 減点ゾーンの数
+            const numPenaltyZones = 2;
             for (let i = 0; i < numPenaltyZones; i++) {
                 penaltyZones.push({
                     x: Math.random() * (canvas.width - 2 * penaltyZoneRadius) + penaltyZoneRadius,
@@ -86,11 +136,9 @@
                 });
             }
 
-            // 餌を減点ゾーンと重ならないように生成
             for (let i = 0; i < numFoods; i++) {
                 let food;
                 let isOverlapping;
-
                 do {
                     food = {
                         x: Math.random() * (canvas.width - 2 * foodRadius) + foodRadius,
@@ -98,28 +146,22 @@
                         taken: false,
                         hovered: false
                     };
-
-                    // 減点ゾーンと重なっているかチェック
                     isOverlapping = penaltyZones.some(zone => distance(food, zone) < penaltyZoneRadius + foodRadius);
                 } while (isOverlapping);
-
                 foods.push(food);
             }
         }
 
-        // 餌の間の最短経路を計算
         function findShortestPath() {
             const path = foods.slice();
             idealPathLength = calculatePathLength(path);
             return path;
         }
 
-        // 距離計算
         function distance(p1, p2) {
             return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2);
         }
 
-        // 経路の長さを計算
         function calculatePathLength(path) {
             let length = 0;
             for (let i = 1; i < path.length; i++) {
@@ -128,27 +170,8 @@
             return length;
         }
 
-        // 点と線分の距離を計算
-        function distanceToSegment(point, p1, p2) {
-            const lineLength = distance(p1, p2);
-            if (lineLength === 0) return distance(point, p1);
-
-            const t = ((point.x - p1.x) * (p2.x - p1.x) + (point.y - p1.y) * (p2.y - p1.y)) / (lineLength * lineLength);
-            const closestPoint = {
-                x: p1.x + t * (p2.x - p1.x),
-                y: p1.y + t * (p2.y - p1.y)
-            };
-
-            return distance(point, closestPoint);
-        }
-
-        // 餌と減点ゾーンを描画
         function drawElements() {
-            // 背景を黒に設定
-            ctx.fillStyle = "black";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 減点ゾーンを描画（グレー）
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "gray";
             penaltyZones.forEach(zone => {
                 ctx.beginPath();
@@ -156,30 +179,25 @@
                 ctx.fill();
             });
 
-            // 餌を描画（白、線に触れていると黄色）
             foods.forEach(food => {
-                // 線と触れているかどうか判定
                 food.hovered = userPath.some(point => distance(point, food) < foodRadius);
-                ctx.fillStyle = food.hovered ? "yellow" : "white"; // 線に触れている場合黄色
+                ctx.fillStyle = food.hovered ? "yellow" : "white";
                 ctx.beginPath();
                 ctx.arc(food.x, food.y, foodRadius, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
 
-        // ユーザーの描いた経路を評価
         function evaluateUserPath() {
             let pathLength = calculatePathLength(userPath);
             let foodCount = 0;
             let penalty = 0;
 
-            // 経路上の各点で餌を通過したか確認
             foods.forEach(food => {
                 food.taken = userPath.some(point => distance(point, food) < foodRadius);
                 if (food.taken) foodCount++;
             });
 
-            // 減点ゾーンのチェック
             userPath.forEach(point => {
                 penaltyZones.forEach(zone => {
                     if (distance(point, zone) < penaltyZoneRadius) {
@@ -188,24 +206,34 @@
                 });
             });
 
-            // スコア計算：2つの餌を取った場合のみ計算、ペナルティがあっても0にはならない
+            // 線ごとのスコア計算と表示
             let score = 0;
             if (foodCount === numFoods) {
                 const distanceScore = Math.max(0, (idealPathLength / pathLength) * 100) - penalty;
                 score = Math.round(distanceScore > 0 ? distanceScore : 0);
             }
             document.getElementById("score").textContent = `スコア: ${score}`;
+
+            // 累計スコアの表示更新
+            totalScore += score;
+            document.getElementById("totalScore").textContent = `累計スコア: ${totalScore}`;
+
+            // 500点ごとにポップアップを表示する
+            if (totalScore >= 500 && totalScore - previousPopupScore >= 500) {
+                previousPopupScore = totalScore;  // ポップアップを表示したスコアを更新
+                showPopup();
+            }
+
         }
 
-        // Canvasのイベントリスナー
         canvas.addEventListener("mousedown", (e) => {
             if (!isDrawing) {
                 isDrawing = true;
-                userPath.length = 0; // 既存の線を消去
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // 新しく描く前にキャンバスをクリア
+                userPath.length = 0;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 const pos = { x: e.offsetX, y: e.offsetY };
                 userPath.push(pos);
-                drawElements(); // 餌と減点ゾーンを再描画
+                drawElements();
             }
         });
 
@@ -214,8 +242,8 @@
             
             if (isDrawing) {
                 userPath.push(mousePos);
-                drawElements(); // 餌と減点ゾーンを再描画
-                drawUserPath(); // ユーザーの描いた経路を描画
+                drawElements();
+                drawUserPath();
             } else {
                 drawElements();
                 drawUserPath();
@@ -227,9 +255,8 @@
             evaluateUserPath();
         });
 
-        // ユーザーの描いた経路を描画
         function drawUserPath() {
-            ctx.strokeStyle = "yellow"; // 線の色を黄色に変更
+            ctx.strokeStyle = "yellow";
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(userPath[0].x, userPath[0].y);
@@ -239,17 +266,26 @@
             ctx.stroke();
         }
 
-        // ゲームをリセット
+        // resetGameの修正：累計スコアはリセットしないようにする
         function resetGame() {
-            userPath.length = 0; // 既存の線を消去
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // キャンバス全体をクリア
-            generateFoodsAndPenaltyZones(); // 餌と減点ゾーンを再生成
-            findShortestPath(); // 最短経路を再計算
-            drawElements(); // 餌と減点ゾーンを描画
-            document.getElementById("score").textContent = "スコア: 0"; // スコアリセット
+            userPath.length = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            generateFoodsAndPenaltyZones();
+            findShortestPath();
+            drawElements();
+            document.getElementById("score").textContent = "スコア: 0";
         }
 
-        // 初期化
+        function showPopup() {
+            const randomFact = facts[Math.floor(Math.random() * facts.length)];
+            document.getElementById("factText").textContent = randomFact;
+            document.getElementById("popup").style.display = "block";
+        }
+
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+
         resetGame();
     </script>
 </body>
