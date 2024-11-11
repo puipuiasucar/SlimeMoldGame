@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>粘菌ゲーム</title>
+    <title>Slime Mold Game</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -53,6 +53,28 @@
             margin-bottom: 20px;
         }
 
+        /* 操作説明ボックス */
+        #instructions {
+            width: 600px;
+            margin: 0 auto 20px;
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            text-align: left;
+        }
+
+        #instructions h2 {
+            color: #ffd700;
+            margin: 0;
+        }
+
+        #instructions p {
+            margin: 5px 0;
+            font-size: 1rem;
+        }
+
         /* ポップアップカード */
         #popup {
             display: none;
@@ -94,6 +116,16 @@
 </head>
 <body>
     <h1>Slime Mold Game</h1>
+    <div id="instructions">
+        <p>粘菌はかしこい単細胞生物で、餌を効率よく吸収するために形を変えます。</p>
+        <p>餌が複数あると、最短経路で結ぼうとします。</p>
+        <p>ただし、光は苦手なので、なるべく避ける性質もあります。</p>
+        <h2>操作説明</h2>
+        <p>1. マウスで粘菌の経路を描き、2個の餌（白丸）をゲットしましょう。</p>
+        <p>2. 光ゾーン（グレー）を通ると、スコアが少し減少します。</p>
+        <p>3. 高スコアを目指しましょう！</p>
+    </div>
+    
     <canvas id="gameCanvas" width="600" height="400"></canvas>
     <p id="score">スコア: 0</p>
     <!-- <p id="totalScore">累計スコア: 0</p> -->
