@@ -140,7 +140,10 @@
             foods.length = 0;
             penaltyZones.length = 0;
 
+            const minFoodDistance = 2 * foodRadius; // 餌同士の最小距離
             const numPenaltyZones = 2;
+
+            // ペナルティゾーンの配置
             for (let i = 0; i < numPenaltyZones; i++) {
                 penaltyZones.push({
                     x: Math.random() * (canvas.width - 2 * penaltyZoneRadius) + penaltyZoneRadius,
@@ -148,6 +151,7 @@
                 });
             }
 
+            // 餌の配置
             for (let i = 0; i < numFoods; i++) {
                 let food;
                 let isOverlapping;
@@ -158,8 +162,16 @@
                         taken: false,
                         hovered: false
                     };
+
+                    // 餌とペナルティゾーンの重なりを確認
                     isOverlapping = penaltyZones.some(zone => distance(food, zone) < penaltyZoneRadius + foodRadius);
+
+                    // 他の餌との重なりを確認
+                    if (!isOverlapping) {
+                        isOverlapping = foods.some(otherFood => distance(food, otherFood) < minFoodDistance);
+                    }
                 } while (isOverlapping);
+
                 foods.push(food);
             }
         }
