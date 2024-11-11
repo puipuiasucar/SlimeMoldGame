@@ -60,7 +60,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 300px;
+            width: 350px; /* 幅を少し広げる */
             padding: 20px;
             background-color: #444;
             border: 2px solid #ffd700;
@@ -69,6 +69,14 @@
             text-align: center;
             z-index: 10;
         }
+
+        #factText {
+            font-size: 1.2rem;
+            line-height: 1.6; /* 行間を広げる */
+            max-width: 100%; /* テキストの幅を制限 */
+            margin: 10px 0;
+        }
+
 
         #popup h2 {
             margin-top: 0;
@@ -223,7 +231,7 @@
             // document.getElementById("totalScore").textContent = `累計スコア: ${totalScore}`;
 
             // 1000点ごとにポップアップを表示する
-            if (totalScore >= 500 && totalScore - previousPopupScore >= 1000) {
+            if (totalScore >= 1000 && totalScore - previousPopupScore >= 1000) {
                 previousPopupScore = totalScore;  // ポップアップを表示したスコアを更新
                 showPopup();
             }
