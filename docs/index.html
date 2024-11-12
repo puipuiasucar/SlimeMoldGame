@@ -297,7 +297,7 @@
             // document.getElementById("totalScore").textContent = `累計スコア: ${totalScore}`;
 
             // 1000点ごとにポップアップを表示する
-            if (totalScore >= 100 && totalScore - previousPopupScore >= 100) {
+            if (totalScore >= 1000 && totalScore - previousPopupScore >= 1000) {
                 previousPopupScore = totalScore;  // ポップアップを表示したスコアを更新
                 showPopup();
             }
