@@ -49,15 +49,11 @@
             background-color: #45a049;
         }
 
-        #score {
-            margin-bottom: 20px;
-        }
-
         /* 操作説明ボックス */
         #instructions {
-            width: 700px;
+            width: 650px;
             margin: 20px auto 20px;
-            padding: 10px;
+            padding: 10px 60px;
             background-color: #444;
             color: white;
             border: 2px solid #ffd700;
@@ -118,9 +114,9 @@
 <body>
     <h1>Slime Mold Game</h1>
     <canvas id="gameCanvas" width="600" height="400"></canvas>
-    <p id="score">スコア: 0</p>
-    <!-- <p id="totalScore">累計スコア: 0</p> -->
-    <button onclick="resetGame()">リセット</button>
+    <p id="score">SCORE: 0</p>
+    <!-- <p id="totalScore">TOTAL SCORE: 0</p> -->
+    <button onclick="resetGame()">RESET</button>
 
     <div id="instructions">
         <p>粘菌 (Slime Mold) はかしこい単細胞生物で、餌を効率よく吸収するために形を変えます。</p>
@@ -268,7 +264,7 @@
                 const distanceScore = Math.max(0, (idealPathLength / pathLength) * 100) - penalty;
                 score = Math.round(distanceScore > 0 ? distanceScore : 0);
             }
-            document.getElementById("score").textContent = `スコア: ${score}`;
+            document.getElementById("score").textContent = `SCORE: ${score}`;
 
             // 累計スコアの表示更新
             totalScore += score;
@@ -331,7 +327,7 @@
             generateFoodsAndPenaltyZones();
             findShortestPath();
             drawElements();
-            document.getElementById("score").textContent = "スコア: 0";
+            document.getElementById("score").textContent = "SCORE: 0";
         }
 
         function showPopup() {
