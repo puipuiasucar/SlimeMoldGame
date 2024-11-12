@@ -24,8 +24,8 @@
         canvas {
             border: 2px solid #fff;
             cursor: crosshair;
-            background-color: #333;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            background-color: #02007c;
+            box-shadow: 0 0 15px #4342a1;
             margin-top: 20px;
         }
 
@@ -127,27 +127,53 @@
         <p>2. 光ゾーンを通ると、スコアが少し減少します。</p>
         <p>3. 高スコアを目指しましょう！</p>
     </div>
-    
+
     <!-- ポップアップカード -->
     <div id="popup">
         <h2>粘菌豆知識</h2>
+        <img id="factImage" src="" alt="Slime Mold Fact Image" width="300">
         <p id="factText"></p>
-        <button id="closePopup" onclick="closePopup()">閉じる</button>
+        <button id="closePopup" onclick="closePopup()">CLOSE</button>
     </div>
+
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
         const facts = [
-            "粘菌は単細胞生物ですが、環境が厳しくなると複数の細胞が集まり、大きな「偽多細胞体」を形成して集団で移動します。",
-            "環境が悪化すると、粘菌は胞子を作り、風に乗って新しい環境に移動します。",
-            "粘菌は生活環の中で「変形体」という動きのある形態と、「胞子体」という静止する形態に分かれます。変形体は成長して餌を探す役割があり、胞子体は繁殖に適した形態です。",
-            "脳や神経がないにもかかわらず、粘菌は学習のような反応を示します。例えば、同じ場所に不快な刺激があると、それを避ける行動を取るようになるといった性質があります。",
-            "粘菌は「原形質流動」と呼ばれる独自の方法で体内の細胞質を流し、体全体を移動させます。この流動はパルスのように波打ちながら進むため、一定のリズムで移動するのが特徴です。",
-            "ある種類の粘菌は、仲間同士で化学物質を放出し合い、環境情報を「共有」しているかのような行動を見せることがあります。こうしてより効果的な移動や餌探しができると考えられています。",
-            "粘菌の行動パターンは、交通網や通信ネットワークの最適化モデルの参考にされることもあります。特に、「最短経路の発見」や「効率的なリソース分配」に応用されています。",
-            "粘菌は一部が切り取られても再生する能力を持っています。分裂しても再び合体できるため、粘菌はほぼ不死に近い生命力を備えています。"
+            {
+                text: "粘菌は単細胞生物ですが、環境が厳しくなると複数の細胞が集まり、大きな「偽多細胞体」を形成して集団で移動します。",
+                image: "image/image01.png"
+            },
+            {
+                text: "環境が悪化すると、粘菌は胞子を作り、風に乗って新しい環境に移動します。",
+                image: "image/image02.png"
+            },
+            {
+                text: "粘菌は生活環の中で「変形体」という動きのある形態と、「胞子体」という静止する形態に分かれます。変形体は成長して餌を探す役割があり、胞子体は繁殖に適した形態です。",
+                image: "image/image03.png"
+            },
+            {
+                text: "脳や神経がないにもかかわらず、粘菌は学習のような反応を示します。例えば、同じ場所に不快な刺激があると、それを避ける行動を取るようになるといった性質があります。",
+                image: "image/image04.png"
+            },
+            {
+                text: "粘菌は「原形質流動」と呼ばれる独自の方法で体内の細胞質を流し、体全体を移動させます。この流動はパルスのように波打ちながら進むため、一定のリズムで移動するのが特徴です。",
+                image: "image/image05.png"
+            },
+            {
+                text: "ある種類の粘菌は、仲間同士で化学物質を放出し合い、環境情報を「共有」しているかのような行動を見せることがあります。こうしてより効果的な移動や餌探しができると考えられています。",
+                image: "image/image06.png"
+            },
+            {
+                text: "粘菌の行動パターンは、交通網や通信ネットワークの最適化モデルの参考にされることもあります。特に、「最短経路の発見」や「効率的なリソース分配」に応用されています。",
+                image: "image/image07.png"
+            },
+            {
+                text: "粘菌は一部が切り取られても再生する能力を持っています。分裂しても再び合体できるため、粘菌はほぼ不死に近い生命力を備えています。",
+                image: "image/image08.png"
+            },
         ];
 
         let totalScore = 0;
@@ -224,7 +250,7 @@
 
         function drawElements() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "gray";
+            ctx.fillStyle = "#4342a1";
             penaltyZones.forEach(zone => {
                 ctx.beginPath();
                 ctx.arc(zone.x, zone.y, penaltyZoneRadius, 0, Math.PI * 2);
@@ -332,9 +358,11 @@
 
         function showPopup() {
             const randomFact = facts[Math.floor(Math.random() * facts.length)];
-            document.getElementById("factText").textContent = randomFact;
+            document.getElementById("factText").textContent = randomFact.text;
+            document.getElementById("factImage").src = randomFact.image;  // 画像を表示
             document.getElementById("popup").style.display = "block";
         }
+
 
         function closePopup() {
             document.getElementById("popup").style.display = "none";
